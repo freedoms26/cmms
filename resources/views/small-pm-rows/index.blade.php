@@ -5,7 +5,9 @@
 @section('content')
     @php
         $fullWidth = true;
+        $label = 'text-xs font-medium text-text-muted';
         $canManage = ! auth()->user()->isSupervisor();
+        $hasFilters = collect(request()->only(['search', 'area_id']))->filter()->isNotEmpty();
         $ir = session('small_pm_row_import_result');
         $actions = fn ($row, $mobile = false) => ['view' => route('small-pm-rows.show', $row), 'mobile' => $mobile]
             + ($canManage ? ['edit' => route('small-pm-rows.edit', ['small_pm_row' => $row->id, 'page' => request('page')]), 'delete' => route('small-pm-rows.destroy', $row), 'confirm' => 'Hapus row?'] : []);
@@ -53,10 +55,27 @@
             <x-ui.alert tone="danger">{{ session('error') }}</x-ui.alert>
         @endif
 
-        <form method="GET" class="card flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
-            <div class="grid gap-1.5 sm:w-72">
-                <label for="spr-search" class="text-xs font-medium text-text-muted">Search</label>
+        <form method="GET" class="card flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-end">
+            <div class="grid gap-1.5 sm:w-64">
+                <label for="spr-search" class="{{ $label }}">Search</label>
                 <input id="spr-search" type="text" name="search" value="{{ request('search') }}" placeholder="Row name" class="input lg:min-h-9">
+            </div>
+            <div class="grid gap-1.5 sm:w-40">
+                <label for="spr-area" class="{{ $label }}">Area</label>
+                <select id="spr-area" name="area_id" class="select lg:min-h-9">
+                    <option value="">All Area</option>
+                    @foreach ($areas as $a)
+                        <option value="{{ $a->id }}" @selected(request('area_id') == $a->id)>{{ $a->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="grid gap-1.5 sm:w-44">
+                <label for="spr-sort" class="{{ $label }}">Sort</label>
+                <select id="spr-sort" name="sort" class="select lg:min-h-9">
+                    <option value="">Default Sort</option>
+                    <option value="name_asc" @selected(request('sort') == 'name_asc')>Row Name A-Z</option>
+                    <option value="name_desc" @selected(request('sort') == 'name_desc')>Row Name Z-A</option>
+                </select>
             </div>
             <div class="flex gap-2 sm:ml-auto">
                 <x-ui.button type="submit" class="flex-1 sm:flex-none lg:min-h-9">Filter</x-ui.button>
@@ -65,7 +84,8 @@
         </form>
 
         @if ($rows->isEmpty())
-            <x-ui.empty-state title="No row yet" :description="$canManage ? 'Add rows one at a time, or import a file using the template above.' : null" />
+            <x-ui.empty-state title="No row found"
+                :description="$hasFilters ? 'Change the filters, or reset them to see every row.' : ($canManage ? 'Add rows one at a time, or import a file using the template above.' : null)" />
         @endif
 
         {{-- Desktop table. Keep this list first: infinite scroll matches lists by key and position. --}}
@@ -74,7 +94,6 @@
                 <table class="data-table min-w-full">
                     <thead>
                         <tr>
-                            <th scope="col" class="text-right">Order</th>
                             <th scope="col">Nama Row</th>
                             <th scope="col">Area</th>
                             <th scope="col" class="text-right">Machine Count</th>
@@ -84,7 +103,6 @@
                     <tbody data-infinite-list="small-pm-rows">
                         @foreach ($rows as $row)
                             <tr>
-                                <td class="text-right tabular-nums">{{ $row->sort_order }}</td>
                                 <td class="font-semibold text-text">{{ $row->name }}</td>
                                 <td>{{ $row->area->name ?? '-' }}</td>
                                 <td class="text-right tabular-nums">{{ $row->machines_count }}</td>
@@ -101,7 +119,7 @@
             @foreach ($rows as $row)
                 <article class="card min-w-0 p-4">
                     <h2 class="break-words text-base font-semibold text-text">{{ $row->name }}</h2>
-                    <p class="text-sm text-text-muted">Order {{ $row->sort_order }} · {{ $row->area->name ?? 'No area' }} · {{ $row->machines_count }} machinin</p>
+                    <p class="text-sm text-text-muted">{{ $row->area->name ?? 'No area' }} · {{ $row->machines_count }} machinin</p>
                     <div class="mt-3 border-t border-border pt-3">@include('partials.master.row-actions', $actions($row, true))</div>
                 </article>
             @endforeach

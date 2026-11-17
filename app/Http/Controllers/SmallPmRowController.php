@@ -26,12 +26,22 @@ class SmallPmRowController extends Controller
             $query->where('name', 'like', '%'.$request->search.'%');
         }
 
-        $rows = $query->orderBy('sort_order')
-            ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
+        if ($request->filled('area_id')) {
+            $query->where('area_id', $request->area_id);
+        }
 
-        return view('small-pm-rows.index', compact('rows'));
+        match ($request->input('sort')) {
+            'name_desc' => $query->orderBy('name', 'desc'),
+            'name_asc' => $query->orderBy('name'),
+            default => $query->orderBy('sort_order')->orderBy('name'),
+        };
+
+        $rows = $query->paginate(20)->withQueryString();
+
+        return view('small-pm-rows.index', [
+            'rows' => $rows,
+            'areas' => $this->areas(),
+        ]);
     }
 
     /**
