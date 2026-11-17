@@ -20,8 +20,11 @@ class PlanBoardService
 {
     /**
      * Open PM Schedule rows of the area that can be planned this week: not
-     * finished, planned up to the end of the month the week ends in. Older
-     * open rows stay in so overdue machines are never lost.
+     * started yet (OPEN) or already overdue (MISSED), planned up to the end
+     * of the month the week ends in. IN_PROGRESS is left out on purpose,
+     * since that machine's work is already underway and should not be
+     * offered back into the pool. Older open rows stay in so overdue
+     * machines are never lost.
      *
      * @return Collection<int, PMSchedule>
      */
@@ -29,7 +32,7 @@ class PlanBoardService
     {
         return PMSchedule::query()
             ->where('area', $plan->area)
-            ->whereNotIn('status', PMSchedule::DONE_STATUSES)
+            ->whereIn('status', PMSchedule::PLANNABLE_STATUSES)
             ->whereDate('plan_date', '<=', $plan->weekEnd()->endOfMonth()->toDateString())
             ->orderByRaw('due_date IS NULL')
             ->orderBy('due_date')

@@ -75,6 +75,14 @@ class PMSchedule extends Model
     public const DONE_STATUSES = ['FINISHED', 'FINISHED_ON_TIME'];
 
     /**
+     * Statuses the Weekly PM Plan can still pick up: not started (OPEN) or
+     * already overdue (MISSED). IN_PROGRESS is excluded on purpose, since
+     * that machine's work has already begun and does not belong back in the
+     * planning pool (see PlanBoardService::candidates()).
+     */
+    public const PLANNABLE_STATUSES = ['OPEN', 'MISSED'];
+
+    /**
      * The datetime this PM's on-site work was started, composed from the
      * EXISTING actual_date (date) + start_time (time-of-day) columns. There
      * is no dedicated started_at column and none is needed. Returns null
