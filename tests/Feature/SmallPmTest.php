@@ -303,17 +303,18 @@ test('execute sets the status from action date vs due date and plans the next cy
     expect($s->fresh()->status)->toBe('FINISH ON TIME');
     expect(app(ActiveActivityResolver::class)->currentFor($pic))->toBeNull();
 
-    // 11 Nov 2026 + 26 weeks = Wed 12 May 2027 -> Monday 10 May.
+    // plan_date (9 Nov 2026) + 26 weeks = 10 May 2027, used exactly, no Monday snap.
     $next = SmallPmSchedule::where('generated_from_id', $s->id)->sole();
     expect($next->plan_date->toDateString())->toBe('2027-05-10');
     expect($next->due_date->toDateString())->toBe('2027-05-24');
     expect($next->status)->toBe('OPEN');
 
-    // Correcting the action date moves the untouched next schedule instead of adding another.
+    // Correcting the action date does NOT move the untouched next schedule: the anchor is
+    // the original schedule's plan_date (unchanged here), not the action_date it was executed on.
     $this->actingAs($pic)->post("/small-pm/{$s->id}/execute", ['action_date' => '2026-11-30']);
     expect($s->fresh()->status)->toBe('FINISH');
     expect(SmallPmSchedule::where('generated_from_id', $s->id)->count())->toBe(1);
-    expect($next->fresh()->plan_date->toDateString())->toBe('2027-05-31');
+    expect($next->fresh()->plan_date->toDateString())->toBe('2027-05-10');
 });
 
 test('a supervisor can list but not execute or plan', function () {
