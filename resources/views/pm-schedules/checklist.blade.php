@@ -175,7 +175,7 @@
                                             <input type="hidden" name="checklists[{{ $i }}][replace]" value="NO">
                                             <input type="checkbox" name="checklists[{{ $i }}][replace]" value="YES"
                                                 {{ $oldChecklist?->replace == 'YES' ? 'checked' : '' }}
-                                                @class(['h-6 w-6 shrink-0', 'accent-danger outline-2 outline-offset-2 outline-danger' => $isReplace, 'accent-success' => ! $isReplace])>
+                                                @class(['h-6 w-6 shrink-0', 'accent-danger outline-2 outline-offset-2 outline-danger' => $isReplace, 'accent-success opacity-20 checked:opacity-100' => ! $isReplace])>
                                         </label>
                                     </td>
 
