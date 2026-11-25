@@ -76,9 +76,9 @@
             @if ($summary['action_duration_by_condition']->isEmpty())
                 <p class="text-sm text-text-muted">No completed action in this filter scope yet.</p>
             @else
-                <dl class="grid grid-cols-2 gap-3">
+                <dl class="flex gap-3 overflow-x-auto pb-1">
                     @foreach ($summary['action_duration_by_condition'] as $row)
-                        <div class="rounded-control border border-border px-3 py-2">
+                        <div class="min-w-[140px] flex-1 rounded-control border border-border px-3 py-2">
                             <dt class="text-xs text-text-muted">{{ $row['label'] }}</dt>
                             <dd class="font-signage text-xl font-semibold text-text">{{ $row['value'] }} days</dd>
                         </div>
