@@ -493,6 +493,17 @@ test('audit and action filter groups start collapsed on phones unless one of the
         ->assertSee('aria-labelledby="oa-group-action" class="grid gap-2 py-3 first:pt-0 last:pb-0 lg:grid-cols-[4.5rem_1fr] lg:items-end lg:gap-4" x-data="{ open: true }"', false);
 });
 
+test('the action table shows the auditor and the action PIC in separate columns', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    $audit = actionOilAudit(actionOilAuditMachine(), ['condition' => 'KRITIS', 'audited_by_name' => 'Budi Auditor']);
+    OilAuditFollowUp::create(['oil_audit_id' => $audit->id, 'problem' => 'Kapstan', 'action_taken' => 'Fixed', 'pic_name' => 'Andi Teknisi', 'actioned_at' => '2026-09-03']);
+
+    $this->actingAs($admin)->get(route('oil-audits.report'))
+        ->assertOk()
+        ->assertSeeInOrder(['>Auditor</th>', '>Action PIC</th>'], false)
+        ->assertSeeInOrder(['Budi Auditor', 'Andi Teknisi']);
+});
+
 test('other filters still work on the action page', function () {
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
     $kritis = actionOilAudit(actionOilAuditMachine(), ['condition' => 'KRITIS']);

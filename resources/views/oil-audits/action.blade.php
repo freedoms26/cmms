@@ -48,6 +48,27 @@
             </section>
         @endif
 
+        {{-- Machines due an oil refill: the same rule as the reminder on the audit entry page. --}}
+        @if ($refillDue->isNotEmpty())
+            <section class="card p-4 sm:p-5" aria-labelledby="refill-heading">
+                <div class="mb-3">
+                    <h2 id="refill-heading" class="font-semibold text-text">Oil refill due <span class="font-normal text-text-muted">({{ $refillDue->count() }})</span></h2>
+                    <p class="mt-0.5 text-sm text-text-muted">Pantau {{ \App\Models\OilAudit::PANTAU_REFILL_REMINDER_AT }} times or more in a row with no action. Refill the oil, then record the action.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    @foreach ($refillDue as $machine)
+                        <a href="{{ $historyUrl($machine) }}" class="flex min-w-0 items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-3 transition-colors hover:border-border-strong">
+                            <div class="min-w-0">
+                                <p class="truncate font-semibold text-text">{{ $machine->machine_number }}</p>
+                                <p class="truncate text-xs text-text-muted">Last checked {{ \Carbon\Carbon::parse($machine->last_audited_at)->format('d M Y') }}</p>
+                            </div>
+                            <x-ui.badge tone="info" class="shrink-0">Pantau &times;{{ $machine->streak }}</x-ui.badge>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         {{-- Summary of the filtered records. --}}
         <dl class="card grid grid-cols-3 divide-border p-4 sm:divide-x">
             <div class="px-1 py-2 sm:px-4">
@@ -248,10 +269,11 @@
                             <tr>
                                 <th scope="col">Machine</th>
                                 <th scope="col">Audit Date</th>
-                                <th scope="col">PIC</th>
+                                <th scope="col">Auditor</th>
                                 <th scope="col">Condition</th>
                                 <th scope="col">Finding</th>
                                 <th scope="col">Follow-up Status</th>
+                                <th scope="col">Action PIC</th>
                                 {{-- Actions stay pinned on the right when the table scrolls sideways. --}}
                                 <th scope="col" class="sticky right-0 bg-surface-sunken"><span class="sr-only">Action</span></th>
                             </tr>
@@ -285,6 +307,7 @@
                                             <x-ui.badge tone="warning">Open</x-ui.badge>
                                         @endif
                                     </td>
+                                    <td class="text-text-muted">{{ $audit->followUp?->pic_name ?: '-' }}</td>
                                     <td class="sticky right-0 whitespace-nowrap bg-surface shadow-[-10px_0_10px_-10px_rgb(15_23_42/0.25)]">
                                         <div class="flex items-center justify-end gap-2">
                                             <x-ui.button size="sm" variant="outline" href="{{ $historyUrl($audit) }}">View</x-ui.button>

@@ -275,4 +275,12 @@ class PMSchedule extends Model
             'pm_schedule_id'
         );
     }
+
+    public function disciplineEntries()
+    {
+        return $this->hasMany(
+            PicDisciplineEntry::class,
+            'pm_schedule_id'
+        );
+    }
 }

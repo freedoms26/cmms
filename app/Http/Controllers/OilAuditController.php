@@ -355,6 +355,11 @@ class OilAuditController extends Controller
             ->limit(8)
             ->get();
 
+        // Same scope as the Open follow-ups card: not narrowed by the filter form.
+        $refillDue = OilAudit::refillDueMachines(OilAudit::query()
+            ->where('area', self::AUDIT_AREA)
+            ->whereIn('machine_type', self::auditMachineTypes()));
+
         // Daily Start prompt — PIC-only, mirrors the Oil Audit scan menu:
         // reflects whether Oil Audit Action is CURRENT right now, not just
         // "started at some point today" (see scan() above). Purely
@@ -368,6 +373,7 @@ class OilAuditController extends Controller
             'actionPics',
             'summary',
             'pendingAudits',
+            'refillDue',
             'promptStart'
         ));
     }

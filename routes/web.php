@@ -21,6 +21,8 @@ use App\Http\Controllers\MachineQrController;
 use App\Http\Controllers\MachineReportController;
 use App\Http\Controllers\OilAuditController;
 use App\Http\Controllers\OilAuditReportController;
+use App\Http\Controllers\PicDisciplineEntryController;
+use App\Http\Controllers\PicDisciplineReportController;
 use App\Http\Controllers\PMReportController;
 use App\Http\Controllers\PMScheduleController;
 use App\Http\Controllers\PMStatusBoardController;
@@ -234,6 +236,18 @@ Route::middleware(['auth', 'role:ADMIN,KOORDINATOR'])->prefix('machine-qr')->nam
 Route::middleware(['auth', 'role:ADMIN,KOORDINATOR'])->group(function () {
     Route::get('/pm-schedules/export', [PMScheduleController::class, 'export'])->name('pm-schedules.export');
     Route::post('/pm-schedules/{pmSchedule}/reopen-edit', [PMScheduleController::class, 'reopenEdit'])->name('pm-schedules.reopen-edit');
+});
+
+// Kedisiplinan PIC: ADMIN/KOORDINATOR full access, SUPERVISOR read-only
+// (RoleMiddleware treats both the `reports.` prefix and any `.index`-named
+// route as GET-only for SUPERVISOR), PIC excluded entirely from both routes.
+Route::middleware(['auth', 'role:ADMIN,KOORDINATOR,SUPERVISOR'])->group(function () {
+    Route::get('/pic-discipline/entries', [PicDisciplineEntryController::class, 'index'])->name('pic-discipline.entries.index');
+    Route::get('/reports/pic-discipline', [PicDisciplineReportController::class, 'index'])->name('reports.pic-discipline');
+    Route::get('/reports/pic-discipline/export', [PicDisciplineReportController::class, 'export'])->name('reports.pic-discipline.export');
+});
+Route::middleware(['auth', 'role:ADMIN,KOORDINATOR'])->group(function () {
+    Route::post('/pic-discipline/entries/{entry}', [PicDisciplineEntryController::class, 'update'])->name('pic-discipline.entries.update');
 });
 
 Route::middleware([
