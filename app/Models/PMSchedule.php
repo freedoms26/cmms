@@ -75,6 +75,16 @@ class PMSchedule extends Model
     public const DONE_STATUSES = ['FINISHED', 'FINISHED_ON_TIME'];
 
     /**
+     * Whether this PM is finished and therefore read-only: Fill PM, Save
+     * Checklist and PIC reassignment are all blocked until a koordinator/
+     * admin reopens it (see PMScheduleController::reopenEdit()).
+     */
+    public function isLocked(): bool
+    {
+        return in_array($this->status, self::DONE_STATUSES, true);
+    }
+
+    /**
      * Statuses the Weekly PM Plan can still pick up: not started (OPEN) or
      * already overdue (MISSED). IN_PROGRESS is excluded on purpose, since
      * that machine's work has already begun and does not belong back in the

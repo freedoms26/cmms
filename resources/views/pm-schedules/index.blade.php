@@ -20,6 +20,7 @@
             <x-slot:actions>
                 <x-ui.button variant="outline" href="{{ route('reports.pm') }}">View Report</x-ui.button>
                 @if ($canImport)
+                    <x-ui.button variant="outline" href="{{ route('pm-schedules.export', request()->query()) }}">Export Excel</x-ui.button>
                     <x-ui.button variant="outline" id="pm-import-open">Import CSV</x-ui.button>
                     <x-ui.button href="{{ route('pm-schedules.create') }}">Add Schedule</x-ui.button>
                 @endif

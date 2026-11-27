@@ -227,6 +227,15 @@ Route::middleware(['auth', 'role:ADMIN,KOORDINATOR'])->prefix('machine-qr')->nam
     Route::get('/overrides/{machine}/history', [MachineQrController::class, 'history'])->name('overrides.history')->whereNumber('machine');
 });
 
+// PM Schedule export + reopen-edit: ADMIN / KOORDINATOR only — SUPERVISOR
+// and PIC are deliberately excluded. Registered before the pm-schedules
+// resource below so the literal /export path isn't swallowed by its
+// {pm_schedule} show route.
+Route::middleware(['auth', 'role:ADMIN,KOORDINATOR'])->group(function () {
+    Route::get('/pm-schedules/export', [PMScheduleController::class, 'export'])->name('pm-schedules.export');
+    Route::post('/pm-schedules/{pmSchedule}/reopen-edit', [PMScheduleController::class, 'reopenEdit'])->name('pm-schedules.reopen-edit');
+});
+
 Route::middleware([
     'auth',
     'role:ADMIN,KOORDINATOR,SUPERVISOR',
