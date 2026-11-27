@@ -133,9 +133,11 @@ class PMScheduleController extends Controller
             });
         }
 
-        // FILTER MACHINE TYPE
+        // FILTER MACHINE TYPE — machine_type[] arrives as an array from the
+        // checkbox-dropdown filter (multi-select), but a plain single value
+        // (e.g. an old bookmarked link) still works via the (array) cast.
         if ($request->filled('machine_type')) {
-            $query->where('machine_type', $request->machine_type);
+            $query->whereIn('machine_type', (array) $request->machine_type);
         }
 
         // FILTER PIC — a specific PIC name, or UNASSIGNED for schedules that
