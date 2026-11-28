@@ -50,11 +50,19 @@
 
         {{-- Machines due an oil refill: the same rule as the reminder on the audit entry page. --}}
         @if ($refillDue->isNotEmpty())
-            <section class="card p-4 sm:p-5" aria-labelledby="refill-heading">
-                <div class="mb-3">
-                    <h2 id="refill-heading" class="font-semibold text-text">Oil refill due <span class="font-normal text-text-muted">({{ $refillDue->count() }})</span></h2>
-                    <p class="mt-0.5 text-sm text-text-muted">Pantau {{ \App\Models\OilAudit::PANTAU_REFILL_REMINDER_AT }} times or more in a row with no action. Refill the oil, then record the action.</p>
-                </div>
+            {{-- Collapsed by default so a long list does not push the table down. --}}
+            <section class="card px-4 py-1 sm:px-5" aria-labelledby="refill-heading" x-data="{ open: false }">
+                <h2 id="refill-heading">
+                    <button type="button" class="flex min-h-11 w-full items-center justify-between gap-3 text-left font-semibold text-text"
+                        @click="open = !open" x-bind:aria-expanded="open.toString()" aria-expanded="false" aria-controls="refill-list">
+                        <span>Oil refill due <span class="font-normal text-text-muted">({{ $refillDue->count() }})</span></span>
+                        <svg class="size-4 shrink-0 text-text-muted transition-transform" :class="open ? '' : '-rotate-90'" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M5 7.5h10L10 13z" />
+                        </svg>
+                    </button>
+                </h2>
+                <div id="refill-list" class="pb-4" x-show="open" x-cloak>
+                <p class="mb-3 text-sm text-text-muted">Pantau {{ \App\Models\OilAudit::PANTAU_REFILL_REMINDER_AT }} times or more in a row with no action. Refill the oil, then record the action.</p>
                 <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
                     @foreach ($refillDue as $machine)
                         <a href="{{ $historyUrl($machine) }}" class="flex min-w-0 items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-3 transition-colors hover:border-border-strong">
@@ -65,6 +73,7 @@
                             <x-ui.badge tone="info" class="shrink-0">Pantau &times;{{ $machine->streak }}</x-ui.badge>
                         </a>
                     @endforeach
+                </div>
                 </div>
             </section>
         @endif

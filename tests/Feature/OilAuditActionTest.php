@@ -504,6 +504,49 @@ test('the action table shows the auditor and the action PIC in separate columns'
         ->assertSeeInOrder(['Budi Auditor', 'Andi Teknisi']);
 });
 
+test('oil refill due card lists machines with a pantau streak at the reminder threshold', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    $series = function (array $conditions) {
+        $machine = actionOilAuditMachine();
+        $audits = [];
+        foreach ($conditions as $i => $condition) {
+            $audits[] = actionOilAudit($machine, ['condition' => $condition, 'audited_at' => now()->subDays(count($conditions) - $i)]);
+        }
+
+        return [$machine, $audits];
+    };
+
+    [$four] = $series(['OKE', 'PANTAU', 'PANTAU', 'PANTAU', 'PANTAU']);
+    [$five] = $series(['PANTAU', 'PANTAU', 'PANTAU', 'PANTAU', 'PANTAU']);
+    [$three] = $series(['PANTAU', 'PANTAU', 'PANTAU']);
+    [$broken] = $series(['PANTAU', 'PANTAU', 'PANTAU', 'PANTAU', 'OKE', 'PANTAU']);
+    [$refilled, $refilledAudits] = $series(['PANTAU', 'PANTAU', 'PANTAU', 'PANTAU', 'PANTAU']);
+    OilAuditFollowUp::create(['oil_audit_id' => end($refilledAudits)->id, 'refill_oil' => true, 'full_check' => false, 'pic_name' => 'Andi', 'actioned_at' => now()]);
+
+    $response = $this->actingAs($admin)->get(route('oil-audits.report'));
+    $response->assertOk()->assertSee('Oil refill due');
+
+    $due = $response->viewData('refillDue')->mapWithKeys(fn ($row) => [$row->machine_id => (int) $row->streak])->all();
+    expect($due)->toBe([$five->id => 5, $four->id => 4]);
+
+    foreach ([$four, $five, $three, $broken, $refilled] as $machine) {
+        $expected = OilAudit::pantauStreak($machine->id) >= OilAudit::PANTAU_REFILL_REMINDER_AT;
+        expect(array_key_exists($machine->id, $due))->toBe($expected);
+    }
+});
+
+test('oil refill due card is hidden when no machine reaches the threshold', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    $machine = actionOilAuditMachine();
+    foreach (range(3, 1) as $daysAgo) {
+        actionOilAudit($machine, ['condition' => 'PANTAU', 'audited_at' => now()->subDays($daysAgo)]);
+    }
+
+    $this->actingAs($admin)->get(route('oil-audits.report'))
+        ->assertOk()
+        ->assertDontSee('Oil refill due');
+});
+
 test('other filters still work on the action page', function () {
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
     $kritis = actionOilAudit(actionOilAuditMachine(), ['condition' => 'KRITIS']);
